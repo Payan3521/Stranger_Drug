@@ -12,6 +12,9 @@ import com.desarrollox.backend_stranger_drug.api_modelos.exception.ModelNotFound
 import com.desarrollox.backend_stranger_drug.api_registro.exception.InvalidAgeException;
 import com.desarrollox.backend_stranger_drug.api_registro.exception.UserAlreadyRegisteredException;
 import com.desarrollox.backend_stranger_drug.api_registro.exception.UserNotFoundException;
+import com.desarrollox.backend_stranger_drug.api_secciones.exception.SectionAlreadyExistsException;
+import com.desarrollox.backend_stranger_drug.api_secciones.exception.SectionNotFoundException;
+import com.desarrollox.backend_stranger_drug.api_notificaciones.exception.NotificationNotFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -28,13 +31,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
         UserNotFoundException.class,
         ModelNotFoundException.class,
-        PurchaseNotFoundException.class
+        PurchaseNotFoundException.class,
+        SectionNotFoundException.class,
+        NotificationNotFoundException.class
     })
     public ResponseEntity<Map<String, Object>> handleNotFound(RuntimeException ex){
         return buildResponse(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage());
     }
 
-    @ExceptionHandler(UserAlreadyRegisteredException.class)
+    @ExceptionHandler({
+        UserAlreadyRegisteredException.class,
+        SectionAlreadyExistsException.class
+    })
     public ResponseEntity<Map<String, Object>> handleConflict(RuntimeException ex) {
         return buildResponse(HttpStatus.CONFLICT, "Conflicto en la solicitud", ex.getMessage());
     }

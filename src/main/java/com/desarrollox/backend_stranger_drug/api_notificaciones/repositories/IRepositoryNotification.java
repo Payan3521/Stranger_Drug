@@ -12,6 +12,6 @@ public interface IRepositoryNotification extends JpaRepository<Notification, Lon
 
     List<Notification> findByReceiverUser_id(Long receiveUserId);
 
-    @Query(value = "DELETE FROM notifications WHERE receiver_user_id = :receiverUser", nativeQuery = true)
+    @Query(value = "DELETE FROM notifications WHERE receiver_user_id = :receiverUserId", nativeQuery = true)
     Void deleteAllByReceiverUserId(@Param("receiverUserId") Long receiverUserId);
 }

@@ -1,9 +1,6 @@
 package com.desarrollox.backend_stranger_drug.api_registro.models;
 
 import java.time.LocalDate;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -39,7 +36,7 @@ public class User {
     @Size(min = 2, max = 50, message = "El nombre no cumple con el tamaño deseado")
     private String name;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", nullable = false, unique = true)
     @Email(message = "Email no valido")
     @Size(min = 5, max = 100, message = "Email debe estar entre 5 y 100 caracteres")
     @Pattern(regexp = "^[a-zA-Z0-9._%+-]{6,}@gmail\\.com$", message = "Email debe ser una dirección de email válida con almenos 6 caracteres antes de @gmail.com")
