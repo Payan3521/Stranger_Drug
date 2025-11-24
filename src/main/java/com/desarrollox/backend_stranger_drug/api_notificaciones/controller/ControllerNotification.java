@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController; 
+import org.springframework.web.bind.annotation.RestController;
+import com.desarrollox.backend_stranger_drug.api_notificaciones.exception.NotificationNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_notificaciones.models.Notification;
 import com.desarrollox.backend_stranger_drug.api_notificaciones.services.IServiceNotification;
 import jakarta.validation.Valid;
@@ -23,13 +24,13 @@ public class ControllerNotification {
     private final IServiceNotification serviceNotification;
 
     @PostMapping
-    public ResponseEntity<Notification> send(@Valid @RequestBody NotificationDto notificationDto){
+    public ResponseEntity<Notification> send(@Valid @RequestBody NotificationDto notificationDto) {
         Notification saved = serviceNotification.send(notificationDto);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<List<Notification>> receive(@PathVariable Long id){
+    public ResponseEntity<List<Notification>> receive(@PathVariable Long id) {
         List<Notification> listNotifications = serviceNotification.receive(id);
         if (listNotifications.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);

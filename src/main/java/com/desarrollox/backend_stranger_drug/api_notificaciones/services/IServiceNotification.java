@@ -8,7 +8,10 @@ import com.desarrollox.backend_stranger_drug.api_notificaciones.models.Notificat
 public interface IServiceNotification {
 
     Notification send(NotificationDto notificationDto);
+
     List<Notification> receive(Long receiveUserId);
+
     Optional<Notification> delete(Long id);
+
     Void clear(Long receiveUserId);
 }

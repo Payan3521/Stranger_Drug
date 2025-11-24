@@ -15,11 +15,12 @@ import com.desarrollox.backend_stranger_drug.api_registro.exception.UserNotFound
 import com.desarrollox.backend_stranger_drug.api_registro.models.User;
 import com.desarrollox.backend_stranger_drug.api_registro.repositories.IRepositoryRegistro;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ServiceNotification implements IServiceNotification{
+public class ServiceNotification implements IServiceNotification {
     private final IRepositoryNotification repositoryNotification;
     private final IRepositoryPurchase repositoryPurchase;
     private final IRepositoryRegistro repositoryRegistro;
@@ -27,13 +28,16 @@ public class ServiceNotification implements IServiceNotification{
     @Override
     public Notification send(NotificationDto notification) {
         if (!repositoryPurchase.existsById(notification.getPurchaseId())) {
-            throw new PurchaseNotFoundException("La compra con id: " + notification.getPurchaseId() + " no fue encontrada");
+            throw new PurchaseNotFoundException(
+                    "La compra con id: " + notification.getPurchaseId() + " no fue encontrada");
         }
         if (!repositoryRegistro.existsById(notification.getSendUserId())) {
-            throw new UserNotFoundException("El usuario con id: " + notification.getSendUserId() + " no fue encontrado");
+            throw new UserNotFoundException(
+                    "El usuario con id: " + notification.getSendUserId() + " no fue encontrado");
         }
         if (!repositoryRegistro.existsById(notification.getReceiverUserId())) {
-            throw new UserNotFoundException("El usuario con id: " + notification.getReceiverUserId() + " no fue encontrado");
+            throw new UserNotFoundException(
+                    "El usuario con id: " + notification.getReceiverUserId() + " no fue encontrado");
         }
         Purchase purchase = repositoryPurchase.findById(notification.getPurchaseId()).get();
         User userSend = repositoryRegistro.findById(notification.getSendUserId()).get();
@@ -54,14 +58,21 @@ public class ServiceNotification implements IServiceNotification{
             Optional<Notification> notification = repositoryNotification.findById(id);
             repositoryNotification.delete(notification.get());
             return Optional.of(notification.get());
-        }else{
-            throw new NotificationNotFoundException("La notificación con id: " + id + " no fue encontrada, por lo que no se pudo eliminar");
+        } else {
+            throw new NotificationNotFoundException(
+                    "La notificación con id: " + id + " no fue encontrada, por lo que no se pudo eliminar");
         }
     }
 
     @Override
+    @Transactional
     public Void clear(Long receiveUserId) {
-        return repositoryNotification.deleteAllByReceiverUserId(receiveUserId);
+        int count = repositoryNotification.deleteAllByReceiverUserId(receiveUserId);
+        if (count == 0) {
+            throw new NotificationNotFoundException(
+                    "No se encontraron notificaciones para eliminar del usuario con id: " + receiveUserId);
+        }
+        return null;
     }
 
 }
