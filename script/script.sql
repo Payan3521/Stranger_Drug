@@ -48,8 +48,10 @@ CREATE TABLE purchases(
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     video_url VARCHAR(225) NOT NULL,
     price_paid DECIMAL NOT NULL,
+    status_purchase_admin BOOLEAN NOT NULL DEFAULT TRUE,
+    status_purchase_cliente BOOLEAN NOT NULL DEFAULT TRUE,
 
-    FOREIGN KEY (buyer_user_id) REFERENCES USERS(id) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (buyer_user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE notifications(
