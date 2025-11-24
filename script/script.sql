@@ -1,4 +1,4 @@
--- Active: 1764011869764@@127.0.0.1@3306@stranger_drug
+-- Active: 1761870270745@@127.0.0.1@3306@stranger_drug
 CREATE DATABASE IF NOT EXISTS stranger_drug;
 
 USE stranger_drug;
@@ -36,7 +36,6 @@ CREATE TABLE purchases(
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     video_id BIGINT NOT NULL,
     price_paid DECIMAL NOT NULL,
-    status_purchase BOOLEAN NOT NULL DEFAULT TRUE, 
 
     FOREIGN KEY (buyer_user_id) REFERENCES USERS(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (video_id) REFERENCES VIDEOS(id) ON DELETE CASCADE ON UPDATE CASCADE
