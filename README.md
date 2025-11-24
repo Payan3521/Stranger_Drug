@@ -1,19 +1,28 @@
 # Stranger_Drug
 
 1. Api de registro
-2. Api de login
-3. Api de modelos
-4. Api de notificaciones
-5. Api de compras
+2. Api de modelos
+-- listo
 
-6. Api de pagos
-7. Api de videos
+    3. Api secciones
+    4. Api de login
+    5. Api de notificaciones
+    6. Api de compras
+    - Implementacion JWT
 
-- Implementacion JWT
+7. Api de pagos
+8. Api de videos
 - Dockerizar para despliegue
 - Despligue en aws
 
 
 Cambiar de String videoUrl a Video video en Purchase
-mirar si poner voy en deletes controller
+mirar si poner void en deletes controller
 poner estado en clase de dominio de purchase
+Validaciones en metodos de objetos relacionados:
+
+    @Override
+    public List<Purchase> findByBuyerUserId(Long buyerId) {
+       return repositoryPurchase.findByBuyerUser(buyerId);
+    }
+

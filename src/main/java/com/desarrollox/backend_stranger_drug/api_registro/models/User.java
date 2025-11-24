@@ -1,6 +1,9 @@
 package com.desarrollox.backend_stranger_drug.api_registro.models;
 
 import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
