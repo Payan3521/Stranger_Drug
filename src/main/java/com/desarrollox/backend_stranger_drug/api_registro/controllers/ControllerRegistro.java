@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.desarrollox.backend_stranger_drug.api_registro.models.User;
 import com.desarrollox.backend_stranger_drug.api_registro.services.IServiceRegistro;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -32,15 +31,13 @@ public class ControllerRegistro {
     @GetMapping("/{id}")
     public ResponseEntity<User> findById(@PathVariable Long id){
         Optional<User> user = serviceRegistro.findById(id);
-        return user.map(value-> new ResponseEntity<>(value, HttpStatus.OK))
-            .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return new ResponseEntity<>(user.get(), HttpStatus.OK);
     }
 
     @GetMapping
     public ResponseEntity<User> findByEmail(@RequestParam String email){
         Optional<User> user = serviceRegistro.findByEmail(email);
-        return user.map(value-> new ResponseEntity<>(value, HttpStatus.OK))
-            .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return new ResponseEntity<>(user.get(), HttpStatus.OK);
     }
     
 }

@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import com.desarrollox.backend_stranger_drug.api_modelos.exception.ModelNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_registro.exception.InvalidAgeException;
 import com.desarrollox.backend_stranger_drug.api_registro.exception.UserAlreadyRegisteredException;
 import com.desarrollox.backend_stranger_drug.api_registro.exception.UserNotFoundException;
@@ -23,7 +25,10 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, status);
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
+    @ExceptionHandler({
+        UserNotFoundException.class,
+        ModelNotFoundException.class
+    })
     public ResponseEntity<Map<String, Object>> handleNotFound(RuntimeException ex){
         return buildResponse(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage());
     }
