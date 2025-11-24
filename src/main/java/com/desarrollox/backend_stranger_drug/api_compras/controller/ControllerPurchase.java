@@ -32,7 +32,7 @@ public class ControllerPurchase {
     //Metodo para eliminar una compra
     //Util en vista de cliente, para eliminar una compra, si ya se aburrió
     //Elimina por completo de la base de datos
-    @GetMapping("/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Purchase> delete(@PathVariable Long id){
         return null;
     }

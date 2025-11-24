@@ -1,4 +1,4 @@
--- Active: 1761870270745@@127.0.0.1@3306@stranger_drug
+-- Active: 1764011869764@@127.0.0.1@3306@stranger_drug
 CREATE DATABASE IF NOT EXISTS stranger_drug;
 
 USE stranger_drug;
@@ -50,7 +50,7 @@ CREATE TABLE purchases(
     video_url VARCHAR(225) NOT NULL,
     price_paid DECIMAL NOT NULL,
 
-    FOREIGN KEY (buyer_user_id) REFERENCES USERS(id) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (buyer_user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE notifications(

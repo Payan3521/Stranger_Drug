@@ -3,25 +3,49 @@ package com.desarrollox.backend_stranger_drug.api_notificaciones.services;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+
+import com.desarrollox.backend_stranger_drug.api_compras.exception.PurchaseNotFoundException;
+import com.desarrollox.backend_stranger_drug.api_compras.models.Purchase;
+import com.desarrollox.backend_stranger_drug.api_compras.repositories.IRepositoryPurchase;
+import com.desarrollox.backend_stranger_drug.api_notificaciones.controller.NotificationDto;
 import com.desarrollox.backend_stranger_drug.api_notificaciones.exception.NotificationNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_notificaciones.models.Notification;
 import com.desarrollox.backend_stranger_drug.api_notificaciones.repositories.IRepositoryNotification;
+import com.desarrollox.backend_stranger_drug.api_registro.exception.UserNotFoundException;
+import com.desarrollox.backend_stranger_drug.api_registro.models.User;
+import com.desarrollox.backend_stranger_drug.api_registro.repositories.IRepositoryRegistro;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class ServiceNotification implements IServiceNotification{
     private final IRepositoryNotification repositoryNotification;
+    private final IRepositoryPurchase repositoryPurchase;
+    private final IRepositoryRegistro repositoryRegistro;
 
     @Override
-    public Notification send(Notification notification) {
-        Notification saved = repositoryNotification.save(notification);
+    public Notification send(NotificationDto notification) {
+        if (!repositoryPurchase.existsById(notification.getPurchaseId())) {
+            throw new PurchaseNotFoundException("La compra con id: " + notification.getPurchaseId() + " no fue encontrada");
+        }
+        if (!repositoryRegistro.existsById(notification.getSendUserId())) {
+            throw new UserNotFoundException("El usuario con id: " + notification.getSendUserId() + " no fue encontrado");
+        }
+        if (!repositoryRegistro.existsById(notification.getReceiverUserId())) {
+            throw new UserNotFoundException("El usuario con id: " + notification.getReceiverUserId() + " no fue encontrado");
+        }
+        Purchase purchase = repositoryPurchase.findById(notification.getPurchaseId()).get();
+        User userSend = repositoryRegistro.findById(notification.getSendUserId()).get();
+        User userReceive = repositoryRegistro.findById(notification.getReceiverUserId()).get();
+        Notification notificationCreate = new Notification("message", purchase, userSend, userReceive);
+        Notification saved = repositoryNotification.save(notificationCreate);
         return saved;
     }
 
     @Override
     public List<Notification> receive(Long receiveUserId) {
-        return repositoryNotification.findByReceiverUser(receiveUserId);
+        return repositoryNotification.findByReceiverUser_id(receiveUserId);
     }
 
     @Override

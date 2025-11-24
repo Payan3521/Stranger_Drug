@@ -23,8 +23,8 @@ public class ControllerNotification {
     private final IServiceNotification serviceNotification;
 
     @PostMapping
-    public ResponseEntity<Notification> send(@Valid @RequestBody Notification notification){
-        Notification saved = serviceNotification.send(notification);
+    public ResponseEntity<Notification> send(@Valid @RequestBody NotificationDto notificationDto){
+        Notification saved = serviceNotification.send(notificationDto);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 

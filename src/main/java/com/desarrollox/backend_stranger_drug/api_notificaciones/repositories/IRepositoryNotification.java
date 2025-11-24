@@ -10,8 +10,8 @@ import com.desarrollox.backend_stranger_drug.api_notificaciones.models.Notificat
 @Repository
 public interface IRepositoryNotification extends JpaRepository<Notification, Long>{
 
-    List<Notification> findByReceiverUser(Long receiveUserId);
+    List<Notification> findByReceiverUser_id(Long receiveUserId);
 
     @Query(value = "DELETE FROM notifications WHERE receiver_user_id = :receiverUser", nativeQuery = true)
-    Void deleteAllByReceiverUserId(@Param("userId") Long receiverUser);
+    Void deleteAllByReceiverUserId(@Param("receiverUserId") Long receiverUserId);
 }
