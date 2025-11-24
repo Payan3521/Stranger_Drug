@@ -12,3 +12,8 @@
 - Implementacion JWT
 - Dockerizar para despliegue
 - Despligue en aws
+
+
+Cambiar de String videoUrl a Video video en Purchase
+mirar si poner voy en deletes controller
+poner estado en clase de dominio de purchase
