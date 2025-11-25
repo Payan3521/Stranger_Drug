@@ -45,7 +45,7 @@ public class User {
     @Column(name = "password", nullable = false)
     @Size(min = 8, max = 128, message = "La contraseña debe de estar entre 8 y 128 caracteres")
     @Pattern(
-        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,128}$",
+        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,128}$",
         message = "La contraseña debe contener al menos una letra minúscula, una mayúscula, un dígito y un caracter especial"
     )
     private String password;

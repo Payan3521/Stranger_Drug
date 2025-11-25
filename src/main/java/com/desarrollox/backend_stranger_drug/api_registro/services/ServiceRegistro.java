@@ -1,8 +1,10 @@
 package com.desarrollox.backend_stranger_drug.api_registro.services;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.desarrollox.backend_stranger_drug.api_registro.exception.InvalidAgeException;
 import com.desarrollox.backend_stranger_drug.api_registro.exception.UserAlreadyRegisteredException;
 import com.desarrollox.backend_stranger_drug.api_registro.exception.UserNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_registro.models.User;
@@ -21,6 +23,9 @@ public class ServiceRegistro implements IServiceRegistro{
     public User create(User user) {
         if(repositoryRegistro.findByEmail(user.getEmail()).isPresent()){
             throw new UserAlreadyRegisteredException("El usuario con email: " + user.getEmail() + " Ya está registrado");
+        }
+        if (user.getBirthdate().isAfter(LocalDate.now().minusYears(18))) {
+            throw new InvalidAgeException("El usuario no es mayor de edad");
         }
 
         user.setRole(Role.CLIENTE);
