@@ -8,3 +8,4 @@
 8. probar: login, publicaciones, pagos y videos
 9. precios de publicacion
 10. validaciones en request
+11. ver referencescolumnnameid

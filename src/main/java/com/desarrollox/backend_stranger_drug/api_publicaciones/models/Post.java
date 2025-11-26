@@ -2,7 +2,6 @@ package com.desarrollox.backend_stranger_drug.api_publicaciones.models;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 import com.desarrollox.backend_stranger_drug.api_modelos.models.Model;
 import com.desarrollox.backend_stranger_drug.api_secciones.models.Section;
 import jakarta.persistence.Column;
@@ -10,11 +9,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 
 @Data
 @Builder
@@ -41,9 +43,18 @@ public class Post {
 
     @Column(name = "description", nullable = false)
     private String description;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "duration", nullable = false)
     private int duration;
+
+    @ManyToOne
+    @JoinColumn(name = "section_id", referencedColumnName = "id")
     private Section section;
+
+    
     private List<Model> models;
     private List<Price> prices;
 }
