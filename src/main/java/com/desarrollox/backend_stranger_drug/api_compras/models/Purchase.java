@@ -2,6 +2,7 @@ package com.desarrollox.backend_stranger_drug.api_compras.models;
 
 import java.time.LocalDateTime;
 import com.desarrollox.backend_stranger_drug.api_registro.models.User;
+import com.desarrollox.backend_stranger_drug.api_videos.models.Video;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,8 +32,9 @@ public class Purchase {
     @JoinColumn(name = "buyer_user_id", referencedColumnName = "id")
     private User buyerUser;
 
-    @Column(name = "video_url", nullable = false)
-    private String videoUrl;
+    @ManyToOne
+    @JoinColumn(name = "video_id", referencedColumnName = "id", nullable = false)
+    private Video videoUrl;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -46,12 +48,11 @@ public class Purchase {
     @Column(name = "status_purchase_cliente", nullable = false)
     private boolean statusPurchaseCliente;
 
-    public Purchase(User buyerUser2, String videoUrl2, double pricePaid2) {
+    public Purchase(User buyerUser2, Video videoUrl2, double pricePaid2) {
         this.buyerUser=buyerUser2;
         this.videoUrl=videoUrl2;
         this.pricePaid=pricePaid2;
     }
-
 
     @PrePersist
     protected void onCreate(){

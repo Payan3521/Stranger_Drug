@@ -1,9 +1,8 @@
 package com.desarrollox.backend_stranger_drug.api_publicaciones.models;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import com.desarrollox.backend_stranger_drug.api_modelos.models.Model;
 import com.desarrollox.backend_stranger_drug.api_secciones.models.Section;
+import com.desarrollox.backend_stranger_drug.api_videos.models.Video;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,11 +29,13 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "main_video_id", nullable = false)
-    private String videoUrl;
+    @ManyToOne
+    @JoinColumn(name = "main_video_id", referencedColumnName = "id", nullable = false)
+    private Video videoUrl;
 
-    @Column(name = "preview_video_id", nullable = false)
-    private String previewUrl;
+    @ManyToOne
+    @JoinColumn(name = "preview_video_id", referencedColumnName = "id", nullable = false)
+    private Video previewUrl;
 
     @Column(name = "thumbnail_url", nullable = false)
     private String thumbnailUrl;

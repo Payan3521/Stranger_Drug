@@ -40,19 +40,6 @@ CREATE TABLE purchases(
     FOREIGN KEY (video_id) REFERENCES videos(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- tabla temporal para probar
-CREATE TABLE purchases(
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    buyer_user_id BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    video_url VARCHAR(225) NOT NULL,
-    price_paid DECIMAL NOT NULL,
-    status_purchase_admin BOOLEAN NOT NULL DEFAULT TRUE,
-    status_purchase_cliente BOOLEAN NOT NULL DEFAULT TRUE,
-
-    FOREIGN KEY (buyer_user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
 CREATE TABLE notifications(
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -72,7 +59,7 @@ CREATE TABLE sections(
     description TEXT NOT NULL
 );
 
-CREATE TABLE post(
+CREATE TABLE posts(
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     main_video_id BIGINT NOT NULL,
     preview_video_id BIGINT NOT NULL,
@@ -85,21 +72,6 @@ CREATE TABLE post(
 
     FOREIGN KEY (main_video_id) REFERENCES videos(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (preview_video_id) REFERENCES videos(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- tabla temporal para probar
-CREATE TABLE posts(
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    main_video_id VARCHAR(225) NOT NULL,
-    preview_video_id VARCHAR(225) NOT NULL,
-    section_id BIGINT,
-    title VARCHAR(100) NOT NULL,
-    description TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    duration_minutes INT NOT NULL,
-    thumbnail_url VARCHAR(225) NOT NULL,
-
     FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
