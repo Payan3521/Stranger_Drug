@@ -16,7 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+import com.desarrollox.backend_stranger_drug.api_videos.models.Photo;
 
 @Data
 @Builder
@@ -31,14 +31,15 @@ public class Post {
 
     @ManyToOne
     @JoinColumn(name = "main_video_id", referencedColumnName = "id", nullable = false)
-    private Video videoUrl;
+    private Video video;
 
     @ManyToOne
     @JoinColumn(name = "preview_video_id", referencedColumnName = "id", nullable = false)
-    private Video previewUrl;
+    private Video previewVideo;
 
-    @Column(name = "thumbnail_url", nullable = false)
-    private String thumbnailUrl;
+    @ManyToOne
+    @JoinColumn(name = "thumbnail_id", referencedColumnName = "id", nullable = false)
+    private Photo thumbnail;
 
     @Column(name = "title", nullable = false)
     private String title;

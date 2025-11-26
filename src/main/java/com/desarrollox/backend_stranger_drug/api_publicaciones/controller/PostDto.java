@@ -6,9 +6,9 @@ import lombok.Data;
 
 @Data
 public class PostDto {
-    private MultipartFile videoUrl;
-    private MultipartFile previewVideoUrl;
-    private MultipartFile thumbnailUrl;
+    private MultipartFile video;
+    private MultipartFile previewVideo;
+    private MultipartFile thumbnail;
     private String title;
     private String description;
     private String sectionName;

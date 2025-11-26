@@ -23,6 +23,8 @@ import com.desarrollox.backend_stranger_drug.api_publicaciones.repositories.IRep
 import com.desarrollox.backend_stranger_drug.api_secciones.exception.SectionNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_secciones.models.Section;
 import com.desarrollox.backend_stranger_drug.api_secciones.repositories.SectionRepository;
+import com.desarrollox.backend_stranger_drug.api_videos.models.Photo;
+import com.desarrollox.backend_stranger_drug.api_videos.models.Video;
 import com.desarrollox.backend_stranger_drug.api_videos.services.IServiceVideo;
 import lombok.RequiredArgsConstructor;
 
@@ -62,10 +64,14 @@ public class ServicePost implements IServicePost {
 
         Section section = sectionRepository.findByName(postDto.getSectionName());
 
+        Video video = serviceVideo.uploadPreviewVideo(postDto.getVideo());
+        Video previewVideo = serviceVideo.uploadPreviewVideo(postDto.getPreviewVideo());
+        Photo thumbnail = serviceVideo.uploadThumbnail(postDto.getThumbnail());
+
         Post post = Post.builder()
-                .videoUrl(postDto.getVideoUrl())
-                .previewUrl(postDto.getPreviewVideoUrl())
-                .thumbnailUrl(postDto.getThumbnailUrl())
+                .video(video)
+                .previewVideo(previewVideo)
+                .thumbnail(thumbnail)
                 .title(postDto.getTitle())
                 .description(postDto.getDescription())
                 .section(section)

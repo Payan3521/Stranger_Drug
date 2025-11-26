@@ -59,6 +59,14 @@ CREATE TABLE sections(
     description TEXT NOT NULL
 );
 
+
+CREATE TABLE photos(
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    s3_bucket VARCHAR(150) NOT NULL,
+    s3_key VARCHAR(300) NOT NULL,
+    s3_url VARCHAR(225) NOT NULL
+);
+
 CREATE TABLE posts(
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     main_video_id BIGINT NOT NULL,
@@ -68,13 +76,13 @@ CREATE TABLE posts(
     description TEXT NOT NULL,
     create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     duration_minutes INT NOT NULL,
-    thumbnail_url VARCHAR(225) NOT NULL,
+    thumbnail_url_id BIGINT NOT NULL,
 
     FOREIGN KEY (main_video_id) REFERENCES videos(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (preview_video_id) REFERENCES videos(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (thumbnail_url_id) REFERENCES photos(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
-
 
 CREATE TABLE prices_post(
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
