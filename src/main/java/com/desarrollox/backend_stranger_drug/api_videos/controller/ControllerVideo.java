@@ -69,9 +69,4 @@ public class ControllerVideo {
         Optional<Video> videoDeleted = serviceVideo.deleteVideo(id);
         return new ResponseEntity<>(videoDeleted.get(), HttpStatus.OK);
     }
-
-    @GetMapping("/stream")
-    public ResponseEntity<String> getVideoStream(@RequestParam("idUsuario") Long idUsuario, @RequestParam("idVideo") Long idVideo){
-        String presignedUrl = serviceVideo.getPresignedUrl()
-    }
 }

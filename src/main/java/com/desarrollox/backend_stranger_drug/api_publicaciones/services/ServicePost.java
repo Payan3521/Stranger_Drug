@@ -302,12 +302,12 @@ public class ServicePost implements IServicePost {
             String email = auth.getName();
             Optional<User> user = repositoryRegistro.findByEmail(email);
             if (user.isPresent()) {
-                // Check if user purchased the video
+                // Check if user is ADMIN or purchased the video
+                boolean isAdmin = user.get().getRole() == User.Role.ADMIN;
                 boolean purchased = repositoryPurchase.existsByBuyerUserIdAndVideoUrlId(user.get().getId(),
                         post.getVideo().getId());
-                // Also allow if user is the creator? Or ADMIN? Assuming ADMIN can see all.
-                // For now, just purchase check.
-                if (purchased) {
+
+                if (isAdmin || purchased) {
                     mainVideoUrl = serviceVideo.getPresignedUrl(post.getVideo().getS3Key());
                 }
             }
