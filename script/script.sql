@@ -89,14 +89,14 @@ CREATE TABLE post(
 );
 
 -- tabla temporal para probar
-CREATE TABLE post(
+CREATE TABLE posts(
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     main_video_id VARCHAR(225) NOT NULL,
     preview_video_id VARCHAR(225) NOT NULL,
     section_id BIGINT,
     title VARCHAR(100) NOT NULL,
     description TEXT NOT NULL,
-    create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     duration_minutes INT NOT NULL,
     thumbnail_url VARCHAR(225) NOT NULL,
 
@@ -109,10 +109,10 @@ CREATE TABLE prices_post(
     post_id BIGINT NOT NULL,
     code_country VARCHAR(50) NOT NULL,
     country VARCHAR(50) NOT NULL,
-    amount DECIMAL NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
     currency VARCHAR(50) NOT NULL,
 
-    FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE post_model(
@@ -120,6 +120,6 @@ CREATE TABLE post_model(
     post_id BIGINT NOT NULL,
     model_id BIGINT NOT NULL,
 
-    FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (model_id) REFERENCES models(id) ON DELETE CASCADE ON UPDATE CASCADE
 );

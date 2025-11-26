@@ -1,5 +1,4 @@
 1. cambiar videoUrl en compra y publicacion
-2. hacer lo de publicacion_modelo
 3. variables de entorno para login
 4. api de pagos
 5. api de videos

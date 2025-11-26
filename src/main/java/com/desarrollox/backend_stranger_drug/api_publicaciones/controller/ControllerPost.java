@@ -1,6 +1,8 @@
 package com.desarrollox.backend_stranger_drug.api_publicaciones.controller;
 
 import java.util.List;
+import java.util.Optional;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.desarrollox.backend_stranger_drug.api_publicaciones.models.Post;
 import com.desarrollox.backend_stranger_drug.api_publicaciones.services.IServicePost;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,45 +21,65 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/api/posts")
 public class ControllerPost {
-    private IServicePost servicePost;
+    private final IServicePost servicePost;
 
     @PostMapping
-    public ResponseEntity<Post> savePost(@Valid @RequestBody PostDto postDto){
-        return null;
+    public ResponseEntity<PostResponseDTO> savePost(@Valid @RequestBody PostDto postDto){
+        PostResponseDTO postResponseDTO = servicePost.savePost(postDto);
+        return new ResponseEntity<>(postResponseDTO, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Post> deletePost(@PathVariable Long id){
-        return null;
+    public ResponseEntity<PostResponseDTO> deletePost(@PathVariable Long id){
+        Optional<PostResponseDTO> post = servicePost.deletePost(id);
+        return new ResponseEntity<>(post.get(), HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Post> updatePost(@PathVariable Long id, @Valid @RequestBody PostDto postDto){
-        return null;
+    public ResponseEntity<PostResponseDTO> updatePost(@PathVariable Long id, @Valid @RequestBody PostDto postDto){
+        Optional<PostResponseDTO> post = servicePost.updatePost(id, postDto);
+        return new ResponseEntity<>(post.get(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Post> getPost(@PathVariable Long id){
-        return null;
+    public ResponseEntity<PostResponseDTO> getPost(@PathVariable Long id){
+        Optional<PostResponseDTO> post = servicePost.getPost(id);
+        return new ResponseEntity<>(post.get(), HttpStatus.OK);
     }
 
     @GetMapping
-    public ResponseEntity<List<Post>> getAllPosts(){
-        return null;
+    public ResponseEntity<List<PostResponseDTO>> getAllPosts(){
+        List<PostResponseDTO> posts = servicePost.getAllPosts();
+        if(posts.isEmpty()){
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(posts, HttpStatus.OK);
     }
 
     @GetMapping("/model")
-    public ResponseEntity<List<Post>> getPostByModelName(@RequestParam String name){
-        return null;
+    public ResponseEntity<List<PostResponseDTO>> getPostByModelName(@RequestParam String name){
+        List<PostResponseDTO> posts = servicePost.getPostByModelName(name);
+        if(posts.isEmpty()){
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(posts, HttpStatus.OK);
     }
 
     @GetMapping("/section")
-    public ResponseEntity<List<Post>> getPostBySectionName(@RequestParam String name){
-        return null;
+    public ResponseEntity<List<PostResponseDTO>> getPostBySectionName(@RequestParam String name){
+        List<PostResponseDTO> posts = servicePost.getPostBySectionName(name);
+        if(posts.isEmpty()){
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(posts, HttpStatus.OK);
     }
 
     @GetMapping("/title")
-    public ResponseEntity<List<Post>> getPostByTitle(@RequestParam String title){
-        return null;
+    public ResponseEntity<List<PostResponseDTO>> getPostByTitle(@RequestParam String title){
+        List<PostResponseDTO> posts = servicePost.getPostByTitle(title);
+        if(posts.isEmpty()){
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(posts, HttpStatus.OK);
     }
 }

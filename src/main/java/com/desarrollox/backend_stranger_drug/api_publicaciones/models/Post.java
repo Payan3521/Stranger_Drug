@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,10 +30,10 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "video_url", nullable = false)
+    @Column(name = "main_video_id", nullable = false)
     private String videoUrl;
 
-    @Column(name = "preview_url", nullable = false)
+    @Column(name = "preview_video_id", nullable = false)
     private String previewUrl;
 
     @Column(name = "thumbnail_url", nullable = false)
@@ -47,14 +48,15 @@ public class Post {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "duration", nullable = false)
+    @Column(name = "duration_minutes", nullable = false)
     private int duration;
 
     @ManyToOne
-    @JoinColumn(name = "section_id", referencedColumnName = "id")
+    @JoinColumn(name = "section_id", referencedColumnName = "id", nullable = false)
     private Section section;
 
-    
-    private List<Model> models;
-    private List<Price> prices;
+    @PrePersist
+    protected void prePersist(){
+        this.createdAt = LocalDateTime.now();
+    }
 }
