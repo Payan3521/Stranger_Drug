@@ -2,6 +2,7 @@ package com.desarrollox.backend_stranger_drug.api_publicaciones.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import com.desarrollox.backend_stranger_drug.api_modelos.exception.ModelNotFoundException;
@@ -26,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ServicePost implements IServicePost{
+public class ServicePost implements IServicePost {
 
     private final IRepositoryPost repositoryPost;
     private final IRepositoryModel repositoryModel;
@@ -41,53 +42,53 @@ public class ServicePost implements IServicePost{
     public PostResponseDTO savePost(PostDto postDto) {
         List<Model> models = repositoryModel.findAllById(postDto.getModels());
 
-        if(models.size() != postDto.getModels().size()){
+        if (models.size() != postDto.getModels().size()) {
             List<Long> encontrados = models.stream()
-                .map(Model::getId)
-                .toList();
+                    .map(Model::getId)
+                    .toList();
 
             List<Long> faltantes = postDto.getModels().stream()
-                .filter(id -> !encontrados.contains(id))
-                .toList();
+                    .filter(id -> !encontrados.contains(id))
+                    .toList();
 
             throw new ModelNotFoundException("Las siguientes modelos no se encontraron: " + faltantes);
         }
 
-        if(!sectionRepository.existsByName(postDto.getSectionName())){
+        if (!sectionRepository.existsByName(postDto.getSectionName())) {
             throw new SectionNotFoundException("La seccion con nombre " + postDto.getSectionName() + " no se encontro");
         }
 
         Section section = sectionRepository.findByName(postDto.getSectionName());
 
         Post post = Post.builder()
-            .videoUrl(postDto.getVideoUrl())
-            .previewUrl(postDto.getPreviewVideoUrl())
-            .thumbnailUrl(postDto.getThumbnailUrl())
-            .title(postDto.getTitle())
-            .description(postDto.getDescription())
-            .section(section)
-            .duration(postDto.getDurationMinutes())
-            .build();
+                .videoUrl(postDto.getVideoUrl())
+                .previewUrl(postDto.getPreviewVideoUrl())
+                .thumbnailUrl(postDto.getThumbnailUrl())
+                .title(postDto.getTitle())
+                .description(postDto.getDescription())
+                .section(section)
+                .duration(postDto.getDurationMinutes())
+                .build();
 
         repositoryPost.save(post);
 
         models.forEach(model -> {
             PostModel postModel = PostModel.builder()
-                .post(post)
-                .model(model)
-                .build();
+                    .post(post)
+                    .model(model)
+                    .build();
 
             repositoryPostModel.save(postModel);
         });
 
         postDto.getPrices().forEach(price -> {
             PricePost pricePost = PricePost.builder()
-                .post(post)
-                .codeCountry(price.getCodeCountry())
-                .country(price.getCountry())
-                .amount(price.getAmount())
-                .currency(price.getCurrency())
-                .build();
+                    .post(post)
+                    .codeCountry(price.getCodeCountry())
+                    .country(price.getCountry())
+                    .amount(price.getAmount())
+                    .currency(price.getCurrency())
+                    .build();
 
             repositoryPricePost.save(pricePost);
         });
@@ -109,11 +110,11 @@ public class ServicePost implements IServicePost{
 
     @Override
     public Optional<PostResponseDTO> deletePost(Long id) {
-        if(repositoryPost.existsById(id)){
+        if (repositoryPost.existsById(id)) {
             Optional<Post> post = repositoryPost.findById(id);
             repositoryPost.delete(post.get());
             return Optional.of(new PostResponseDTO());
-        }else{
+        } else {
             throw new PostNotFoundException("El post con id " + id + " no se encontro, no se puede eliminar");
         }
     }
@@ -121,26 +122,26 @@ public class ServicePost implements IServicePost{
     @Override
     public Optional<PostResponseDTO> updatePost(Long id, PostDto postDto) {
         Post post = repositoryPost.findById(id)
-            .orElseThrow(() -> new PostNotFoundException("El post con id " + id + " no se encontro"));
+                .orElseThrow(() -> new PostNotFoundException("El post con id " + id + " no se encontro"));
 
-        //validar modelos
+        // validar modelos
         List<Model> models = repositoryModel.findAllById(postDto.getModels());
 
-        if(models.size() != postDto.getModels().size()){
+        if (models.size() != postDto.getModels().size()) {
             List<Long> encontrados = models.stream()
-                .map(Model::getId)
-                .toList();
+                    .map(Model::getId)
+                    .toList();
 
             List<Long> faltantes = postDto.getModels().stream()
-                .filter(modelId -> !encontrados.contains(modelId))
-                .toList();
+                    .filter(modelId -> !encontrados.contains(modelId))
+                    .toList();
 
             throw new ModelNotFoundException("Las siguientes modelos no se encontraron: " + faltantes);
         }
 
-        //validar seccion
+        // validar seccion
         Section section = sectionRepository.findByName(postDto.getSectionName());
-        if(section == null){
+        if (section == null) {
             throw new SectionNotFoundException("La seccion con nombre " + postDto.getSectionName() + " no se encontro");
         }
 
@@ -154,41 +155,88 @@ public class ServicePost implements IServicePost{
 
         repositoryPost.save(post);
 
-        //Actualizar modelos
-        List<PostModel> actuales = repositoryPostModel.findAll()
-            .stream()
-            .filter(pm -> pm.getPost().getId().equals(id))
-            .toList();
+        // Actualizar modelos
+        List<PostModel> actuales = repositoryPostModel.findByPostId(id);
+        List<Long> nuevosIds = postDto.getModels();
 
-        repositoryPostModel.deleteAll(actuales);
+        // Eliminar los que ya no están
+        List<PostModel> aEliminar = actuales.stream()
+                .filter(pm -> !nuevosIds.contains(pm.getModel().getId()))
+                .toList();
+        repositoryPostModel.deleteAll(aEliminar);
 
-        models.forEach(model -> {
-            PostModel newPm = PostModel.builder()
-                    .post(post)
-                    .model(model)
-                    .build();
-            repositoryPostModel.save(newPm);
-        });
-
-        // 5. Actualizar precios
-        List<PricePost> preciosActuales = repositoryPricePost.findAll()
-                .stream()
-                .filter(p -> p.getPost().getId().equals(id))
+        // Agregar los nuevos
+        List<Long> idsActuales = actuales.stream()
+                .map(pm -> pm.getModel().getId())
                 .toList();
 
-        repositoryPricePost.deleteAll(preciosActuales);
+        models.stream()
+                .filter(m -> !idsActuales.contains(m.getId()))
+                .forEach(model -> {
+                    PostModel newPm = PostModel.builder()
+                            .post(post)
+                            .model(model)
+                            .build();
+                    repositoryPostModel.save(newPm);
+                });
 
-        postDto.getPrices().forEach(price -> {
-            PricePost newPrice = PricePost.builder()
-                    .post(post)
-                    .codeCountry(price.getCodeCountry())
-                    .country(price.getCountry())
-                    .amount(price.getAmount())
-                    .currency(price.getCurrency())
-                    .build();
+        // 5. Actualizar precios
+        List<PricePost> preciosActuales = repositoryPricePost.findByPostId(id);
 
-            repositoryPricePost.save(newPrice);
+        // Estrategia: Borrar todo y volver a crear es lo que causa el incremento de
+        // IDs.
+        // Mejor estrategia: Reutilizar entidades existentes si es posible, o
+        // simplemente aceptar que los precios son value objects.
+        // Dado el requerimiento del usuario de NO incrementar IDs, intentaremos
+        // reutilizar.
+        // Sin embargo, los precios no tienen un ID natural único aparte del
+        // autogenerado.
+        // Asumiremos que si el país y moneda coinciden, es el mismo precio y
+        // actualizamos el monto.
+
+        // Para simplificar y cumplir con "no incrementar IDs", podemos intentar mapear
+        // por algún criterio o simplemente
+        // actualizar los primeros N registros y borrar/crear el resto.
+        // Pero una mejor aproximación para listas de valores es:
+        // 1. Identificar precios por (Country, CodeCountry, Currency) si son únicos.
+        // Si no hay clave única lógica, es difícil preservar IDs sin heurísticas.
+        // Asumiremos que (CodeCountry, Currency) debería ser único para un post.
+
+        // Mapear precios actuales por una clave compuesta (ej: codeCountry + currency)
+        // O simplemente iterar y tratar de hacer match.
+        // Dado que el usuario se queja de los IDs, haremos un esfuerzo por preservar.
+
+        // Copia mutable de precios actuales para ir consumiéndolos
+        List<PricePost> preciosDisponibles = new ArrayList<>(preciosActuales);
+
+        postDto.getPrices().forEach(dto -> {
+            // Buscar si existe un precio con el mismo codeCountry y currency
+            Optional<PricePost> existente = preciosDisponibles.stream()
+                    .filter(p -> p.getCodeCountry().equals(dto.getCodeCountry())
+                            && p.getCurrency().equals(dto.getCurrency()))
+                    .findFirst();
+
+            if (existente.isPresent()) {
+                PricePost p = existente.get();
+                p.setAmount(dto.getAmount());
+                p.setCountry(dto.getCountry()); // Actualizar nombre país si cambió
+                repositoryPricePost.save(p);
+                preciosDisponibles.remove(p); // Ya procesado
+            } else {
+                // Crear nuevo
+                PricePost newPrice = PricePost.builder()
+                        .post(post)
+                        .codeCountry(dto.getCodeCountry())
+                        .country(dto.getCountry())
+                        .amount(dto.getAmount())
+                        .currency(dto.getCurrency())
+                        .build();
+                repositoryPricePost.save(newPrice);
+            }
         });
+
+        // Eliminar los que sobraron (estaban en BD pero no en el DTO)
+        repositoryPricePost.deleteAll(preciosDisponibles);
 
         PostResponseDTO response = new PostResponseDTO();
         response.setId(post.getId());
@@ -199,21 +247,18 @@ public class ServicePost implements IServicePost{
         response.setDescription(post.getDescription());
         response.setSection(sectionWebMapper.toSectionResponseDTO(post.getSection()));
         response.setDurationMinutes(post.getDuration());
-        
+
         List<PostModel> relacioness = repositoryPostModel
-            .findByPostId(post.getId());
-        
+                .findByPostId(post.getId());
+
         List<Model> modelos = relacioness.stream()
-            .map(PostModel::getModel)
-            .toList();
-        
+                .map(PostModel::getModel)
+                .toList();
+
         response.setModels(modelWebMapper.toModelDtoList(modelos));
-        
-        List<PricePost> precios = repositoryPricePost.findAll()
-            .stream()
-            .filter(p -> p.getPost().getId().equals(post.getId()))
-            .toList();  
-        
+
+        List<PricePost> precios = repositoryPricePost.findByPostId(post.getId());
+
         response.setPrices(priceWebMapper.toPriceDtoList(precios));
 
         return Optional.of(response);
@@ -221,7 +266,7 @@ public class ServicePost implements IServicePost{
 
     @Override
     public Optional<PostResponseDTO> getPost(Long id) {
-        if(repositoryPost.existsById(id)){
+        if (repositoryPost.existsById(id)) {
             PostResponseDTO response = new PostResponseDTO();
             response.setId(id);
             response.setVideoUrl(repositoryPost.findById(id).get().getVideoUrl());
@@ -231,24 +276,21 @@ public class ServicePost implements IServicePost{
             response.setDescription(repositoryPost.findById(id).get().getDescription());
             response.setSection(sectionWebMapper.toSectionResponseDTO(repositoryPost.findById(id).get().getSection()));
             response.setDurationMinutes(repositoryPost.findById(id).get().getDuration());
-            
+
             List<PostModel> relacioness = repositoryPostModel
-                .findByPostId(id);
-            
+                    .findByPostId(id);
+
             List<Model> modelos = relacioness.stream()
-                .map(PostModel::getModel)
-                .toList();
-            
+                    .map(PostModel::getModel)
+                    .toList();
+
             response.setModels(modelWebMapper.toModelDtoList(modelos));
-            
-            List<PricePost> precios = repositoryPricePost.findAll()
-                .stream()
-                .filter(p -> p.getPost().getId().equals(id))
-                .toList();  
-            
+
+            List<PricePost> precios = repositoryPricePost.findByPostId(id);
+
             response.setPrices(priceWebMapper.toPriceDtoList(precios));
             return Optional.of(response);
-        }else{
+        } else {
             throw new PostNotFoundException("El post con id " + id + " no se encontro");
         }
     }
@@ -257,8 +299,8 @@ public class ServicePost implements IServicePost{
     public List<PostResponseDTO> getAllPosts() {
         List<Post> posts = repositoryPost.findAll();
         List<PostResponseDTO> response = new ArrayList<>();
-        
-        for(Post post : posts){
+
+        for (Post post : posts) {
             PostResponseDTO postResponseDTO = new PostResponseDTO();
             postResponseDTO.setId(post.getId());
             postResponseDTO.setVideoUrl(post.getVideoUrl());
@@ -268,21 +310,18 @@ public class ServicePost implements IServicePost{
             postResponseDTO.setDescription(post.getDescription());
             postResponseDTO.setSection(sectionWebMapper.toSectionResponseDTO(post.getSection()));
             postResponseDTO.setDurationMinutes(post.getDuration());
-            
+
             List<PostModel> relacioness = repositoryPostModel
-                .findByPostId(post.getId());
-            
+                    .findByPostId(post.getId());
+
             List<Model> modelos = relacioness.stream()
-                .map(PostModel::getModel)
-                .toList();
-            
+                    .map(PostModel::getModel)
+                    .toList();
+
             postResponseDTO.setModels(modelWebMapper.toModelDtoList(modelos));
-            
-            List<PricePost> precios = repositoryPricePost.findAll()
-                .stream()
-                .filter(p -> p.getPost().getId().equals(post.getId()))
-                .toList();  
-            
+
+            List<PricePost> precios = repositoryPricePost.findByPostId(post.getId());
+
             postResponseDTO.setPrices(priceWebMapper.toPriceDtoList(precios));
             response.add(postResponseDTO);
         }
@@ -298,37 +337,40 @@ public class ServicePost implements IServicePost{
             throw new PostNotFoundException("No hay publicaciones con modelos que coincidan con " + modelName);
         }
 
-        List<PostResponseDTO> response = new ArrayList<>();
-        
-        for(PostModel relacion : relaciones){
+        // Usar un Map para eliminar duplicados basados en el ID del post
+        Map<Long, PostResponseDTO> responseMap = new java.util.HashMap<>();
+
+        for (PostModel relacion : relaciones) {
+            Post post = relacion.getPost();
+            if (responseMap.containsKey(post.getId())) {
+                continue;
+            }
+
             PostResponseDTO postResponseDTO = new PostResponseDTO();
-            postResponseDTO.setId(relacion.getPost().getId());
-            postResponseDTO.setVideoUrl(relacion.getPost().getVideoUrl());
-            postResponseDTO.setPreviewUrl(relacion.getPost().getPreviewUrl());
-            postResponseDTO.setThumbnailUrl(relacion.getPost().getThumbnailUrl());
-            postResponseDTO.setTitle(relacion.getPost().getTitle());
-            postResponseDTO.setDescription(relacion.getPost().getDescription());
-            postResponseDTO.setSection(sectionWebMapper.toSectionResponseDTO(relacion.getPost().getSection()));
-            postResponseDTO.setDurationMinutes(relacion.getPost().getDuration());
-            
+            postResponseDTO.setId(post.getId());
+            postResponseDTO.setVideoUrl(post.getVideoUrl());
+            postResponseDTO.setPreviewUrl(post.getPreviewUrl());
+            postResponseDTO.setThumbnailUrl(post.getThumbnailUrl());
+            postResponseDTO.setTitle(post.getTitle());
+            postResponseDTO.setDescription(post.getDescription());
+            postResponseDTO.setSection(sectionWebMapper.toSectionResponseDTO(post.getSection()));
+            postResponseDTO.setDurationMinutes(post.getDuration());
+
             List<PostModel> relacioness = repositoryPostModel
-                .findByPostId(relacion.getPost().getId());
-            
+                    .findByPostId(post.getId());
+
             List<Model> modelos = relacioness.stream()
-                .map(PostModel::getModel)
-                .toList();
-            
+                    .map(PostModel::getModel)
+                    .toList();
+
             postResponseDTO.setModels(modelWebMapper.toModelDtoList(modelos));
-            
-            List<PricePost> precios = repositoryPricePost.findAll()
-                .stream()
-                .filter(p -> p.getPost().getId().equals(relacion.getPost().getId()))
-                .toList();  
-            
+
+            List<PricePost> precios = repositoryPricePost.findByPostId(post.getId());
+
             postResponseDTO.setPrices(priceWebMapper.toPriceDtoList(precios));
-            response.add(postResponseDTO);
+            responseMap.put(post.getId(), postResponseDTO);
         }
-        return response;
+        return new ArrayList<>(responseMap.values());
     }
 
     @Override
@@ -341,8 +383,8 @@ public class ServicePost implements IServicePost{
         }
 
         List<PostResponseDTO> response = new ArrayList<>();
-        
-        for(Post post : posts){
+
+        for (Post post : posts) {
             PostResponseDTO postResponseDTO = new PostResponseDTO();
             postResponseDTO.setId(post.getId());
             postResponseDTO.setVideoUrl(post.getVideoUrl());
@@ -352,21 +394,18 @@ public class ServicePost implements IServicePost{
             postResponseDTO.setDescription(post.getDescription());
             postResponseDTO.setSection(sectionWebMapper.toSectionResponseDTO(post.getSection()));
             postResponseDTO.setDurationMinutes(post.getDuration());
-            
+
             List<PostModel> relaciones = repositoryPostModel
-                .findByPostId(post.getId());
-            
+                    .findByPostId(post.getId());
+
             List<Model> modelos = relaciones.stream()
-                .map(PostModel::getModel)
-                .toList();
-            
+                    .map(PostModel::getModel)
+                    .toList();
+
             postResponseDTO.setModels(modelWebMapper.toModelDtoList(modelos));
-            
-            List<PricePost> precios = repositoryPricePost.findAll()
-                .stream()
-                .filter(p -> p.getPost().getId().equals(post.getId()))
-                .toList();  
-            
+
+            List<PricePost> precios = repositoryPricePost.findByPostId(post.getId());
+
             postResponseDTO.setPrices(priceWebMapper.toPriceDtoList(precios));
             response.add(postResponseDTO);
         }
@@ -383,8 +422,8 @@ public class ServicePost implements IServicePost{
         }
 
         List<PostResponseDTO> response = new ArrayList<>();
-        
-        for(Post post : posts){
+
+        for (Post post : posts) {
             PostResponseDTO postResponseDTO = new PostResponseDTO();
             postResponseDTO.setId(post.getId());
             postResponseDTO.setVideoUrl(post.getVideoUrl());
@@ -394,21 +433,18 @@ public class ServicePost implements IServicePost{
             postResponseDTO.setDescription(post.getDescription());
             postResponseDTO.setSection(sectionWebMapper.toSectionResponseDTO(post.getSection()));
             postResponseDTO.setDurationMinutes(post.getDuration());
-            
+
             List<PostModel> relaciones = repositoryPostModel
-                .findByPostId(post.getId());
-            
+                    .findByPostId(post.getId());
+
             List<Model> modelos = relaciones.stream()
-                .map(PostModel::getModel)
-                .toList();
-            
+                    .map(PostModel::getModel)
+                    .toList();
+
             postResponseDTO.setModels(modelWebMapper.toModelDtoList(modelos));
-            
-            List<PricePost> precios = repositoryPricePost.findAll()
-                .stream()
-                .filter(p -> p.getPost().getId().equals(post.getId()))
-                .toList();  
-            
+
+            List<PricePost> precios = repositoryPricePost.findByPostId(post.getId());
+
             postResponseDTO.setPrices(priceWebMapper.toPriceDtoList(precios));
             response.add(postResponseDTO);
         }

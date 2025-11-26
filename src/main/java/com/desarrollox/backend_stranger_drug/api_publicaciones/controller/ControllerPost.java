@@ -30,9 +30,9 @@ public class ControllerPost {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<PostResponseDTO> deletePost(@PathVariable Long id){
-        Optional<PostResponseDTO> post = servicePost.deletePost(id);
-        return new ResponseEntity<>(post.get(), HttpStatus.OK);
+    public ResponseEntity<Void> deletePost(@PathVariable Long id){
+        servicePost.deletePost(id);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
