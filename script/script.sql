@@ -76,12 +76,12 @@ CREATE TABLE posts(
     description TEXT NOT NULL,
     create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     duration_minutes INT NOT NULL,
-    thumbnail_url_id BIGINT NOT NULL,
+    thumbnail_id BIGINT NOT NULL,
 
     FOREIGN KEY (main_video_id) REFERENCES videos(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (preview_video_id) REFERENCES videos(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (thumbnail_url_id) REFERENCES photos(id) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (thumbnail_id) REFERENCES photos(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE prices_post(

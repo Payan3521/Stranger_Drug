@@ -3,7 +3,7 @@ package com.desarrollox.backend_stranger_drug.api_publicaciones.controller.webMa
 import java.util.List;
 import org.springframework.stereotype.Component;
 import com.desarrollox.backend_stranger_drug.api_modelos.models.Model;
-import com.desarrollox.backend_stranger_drug.api_publicaciones.controller.ModelDto;
+import com.desarrollox.backend_stranger_drug.api_publicaciones.controller.dto.ModelDto;
 
 @Component
 public class ModelWebMapper {

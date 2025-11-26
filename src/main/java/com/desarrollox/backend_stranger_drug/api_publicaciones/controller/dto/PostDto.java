@@ -1,4 +1,4 @@
-package com.desarrollox.backend_stranger_drug.api_publicaciones.controller;
+package com.desarrollox.backend_stranger_drug.api_publicaciones.controller.dto;
 
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;

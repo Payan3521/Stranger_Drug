@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.desarrollox.backend_stranger_drug.api_publicaciones.controller.dto.PostDto;
+import com.desarrollox.backend_stranger_drug.api_publicaciones.controller.dto.PostResponseDTO;
 import com.desarrollox.backend_stranger_drug.api_publicaciones.services.IServicePost;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
