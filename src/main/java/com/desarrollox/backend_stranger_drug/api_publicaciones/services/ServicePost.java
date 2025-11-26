@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import com.desarrollox.backend_stranger_drug.api_compras.repositories.IRepositoryPurchase;
 import com.desarrollox.backend_stranger_drug.api_modelos.exception.ModelNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_modelos.models.Model;
 import com.desarrollox.backend_stranger_drug.api_modelos.repositories.IRepositoryModel;
@@ -20,6 +23,8 @@ import com.desarrollox.backend_stranger_drug.api_publicaciones.models.PricePost;
 import com.desarrollox.backend_stranger_drug.api_publicaciones.repositories.IRepositoryPost;
 import com.desarrollox.backend_stranger_drug.api_publicaciones.repositories.IRepositoryPostModel;
 import com.desarrollox.backend_stranger_drug.api_publicaciones.repositories.IRepositoryPricePost;
+import com.desarrollox.backend_stranger_drug.api_registro.models.User;
+import com.desarrollox.backend_stranger_drug.api_registro.repositories.IRepositoryRegistro;
 import com.desarrollox.backend_stranger_drug.api_secciones.exception.SectionNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_secciones.models.Section;
 import com.desarrollox.backend_stranger_drug.api_secciones.repositories.SectionRepository;
@@ -41,6 +46,8 @@ public class ServicePost implements IServicePost {
     private final SectionWebMapper sectionWebMapper;
     private final PriceWebMapper priceWebMapper;
     private final IServiceVideo serviceVideo;
+    private final IRepositoryPurchase repositoryPurchase;
+    private final IRepositoryRegistro repositoryRegistro;
 
     @Override
     public PostResponseDTO savePost(PostDto postDto) {
@@ -64,7 +71,7 @@ public class ServicePost implements IServicePost {
 
         Section section = sectionRepository.findByName(postDto.getSectionName());
 
-        Video video = serviceVideo.uploadPreviewVideo(postDto.getVideo());
+        Video video = serviceVideo.uploadVideo(postDto.getVideo());
         Video previewVideo = serviceVideo.uploadPreviewVideo(postDto.getPreviewVideo());
         Photo thumbnail = serviceVideo.uploadThumbnail(postDto.getThumbnail());
 
@@ -89,37 +96,30 @@ public class ServicePost implements IServicePost {
             repositoryPostModel.save(postModel);
         });
 
-        postDto.getPrices().forEach(price -> {
-            PricePost pricePost = PricePost.builder()
-                    .post(post)
-                    .codeCountry(price.getCodeCountry())
-                    .country(price.getCountry())
-                    .amount(price.getAmount())
-                    .currency(price.getCurrency())
-                    .build();
+        if (postDto.getPrices() != null) {
+            postDto.getPrices().forEach(price -> {
+                PricePost pricePost = PricePost.builder()
+                        .post(post)
+                        .codeCountry(price.getCodeCountry())
+                        .country(price.getCountry())
+                        .amount(price.getAmount())
+                        .currency(price.getCurrency())
+                        .build();
 
-            repositoryPricePost.save(pricePost);
-        });
+                repositoryPricePost.save(pricePost);
+            });
+        }
 
-        PostResponseDTO postResponseDTO = new PostResponseDTO();
-        postResponseDTO.setId(post.getId());
-        postResponseDTO.setVideoUrl(post.getVideoUrl());
-        postResponseDTO.setPreviewUrl(post.getPreviewUrl());
-        postResponseDTO.setThumbnailUrl(post.getThumbnailUrl());
-        postResponseDTO.setTitle(post.getTitle());
-        postResponseDTO.setDescription(post.getDescription());
-        postResponseDTO.setSection(sectionWebMapper.toSectionResponseDTO(post.getSection()));
-        postResponseDTO.setDurationMinutes(post.getDuration());
-        postResponseDTO.setModels(modelWebMapper.toModelDtoList(models));
-        postResponseDTO.setPrices(postDto.getPrices());
-
-        return postResponseDTO;
+        return mapToResponseDTO(post);
     }
 
     @Override
     public Optional<PostResponseDTO> deletePost(Long id) {
         if (repositoryPost.existsById(id)) {
             Optional<Post> post = repositoryPost.findById(id);
+            // Optionally delete videos from S3 here if needed
+            // serviceVideo.deleteVideo(post.get().getVideo().getId());
+            // serviceVideo.deleteVideo(post.get().getPreviewVideo().getId());
             repositoryPost.delete(post.get());
             return Optional.of(new PostResponseDTO());
         } else {
@@ -157,9 +157,20 @@ public class ServicePost implements IServicePost {
         post.setTitle(postDto.getTitle());
         post.setDescription(postDto.getDescription());
         post.setDuration(postDto.getDurationMinutes());
-        post.setVideoUrl(postDto.getVideoUrl());
-        post.setPreviewUrl(postDto.getPreviewVideoUrl());
-        post.setThumbnailUrl(postDto.getThumbnailUrl());
+
+        // Handle file updates if provided
+        if (postDto.getVideo() != null && !postDto.getVideo().isEmpty()) {
+            Video newVideo = serviceVideo.uploadVideo(postDto.getVideo());
+            post.setVideo(newVideo);
+        }
+        if (postDto.getPreviewVideo() != null && !postDto.getPreviewVideo().isEmpty()) {
+            Video newPreview = serviceVideo.uploadPreviewVideo(postDto.getPreviewVideo());
+            post.setPreviewVideo(newPreview);
+        }
+        if (postDto.getThumbnail() != null && !postDto.getThumbnail().isEmpty()) {
+            Photo newThumbnail = serviceVideo.uploadThumbnail(postDto.getThumbnail());
+            post.setThumbnail(newThumbnail);
+        }
 
         repositoryPost.save(post);
 
@@ -188,152 +199,51 @@ public class ServicePost implements IServicePost {
                     repositoryPostModel.save(newPm);
                 });
 
-        // 5. Actualizar precios
+        // Actualizar precios
         List<PricePost> preciosActuales = repositoryPricePost.findByPostId(id);
-
-        // Estrategia: Borrar todo y volver a crear es lo que causa el incremento de
-        // IDs.
-        // Mejor estrategia: Reutilizar entidades existentes si es posible, o
-        // simplemente aceptar que los precios son value objects.
-        // Dado el requerimiento del usuario de NO incrementar IDs, intentaremos
-        // reutilizar.
-        // Sin embargo, los precios no tienen un ID natural único aparte del
-        // autogenerado.
-        // Asumiremos que si el país y moneda coinciden, es el mismo precio y
-        // actualizamos el monto.
-
-        // Para simplificar y cumplir con "no incrementar IDs", podemos intentar mapear
-        // por algún criterio o simplemente
-        // actualizar los primeros N registros y borrar/crear el resto.
-        // Pero una mejor aproximación para listas de valores es:
-        // 1. Identificar precios por (Country, CodeCountry, Currency) si son únicos.
-        // Si no hay clave única lógica, es difícil preservar IDs sin heurísticas.
-        // Asumiremos que (CodeCountry, Currency) debería ser único para un post.
-
-        // Mapear precios actuales por una clave compuesta (ej: codeCountry + currency)
-        // O simplemente iterar y tratar de hacer match.
-        // Dado que el usuario se queja de los IDs, haremos un esfuerzo por preservar.
-
-        // Copia mutable de precios actuales para ir consumiéndolos
         List<PricePost> preciosDisponibles = new ArrayList<>(preciosActuales);
 
-        postDto.getPrices().forEach(dto -> {
-            // Buscar si existe un precio con el mismo codeCountry y currency
-            Optional<PricePost> existente = preciosDisponibles.stream()
-                    .filter(p -> p.getCodeCountry().equals(dto.getCodeCountry())
-                            && p.getCurrency().equals(dto.getCurrency()))
-                    .findFirst();
+        if (postDto.getPrices() != null) {
+            postDto.getPrices().forEach(dto -> {
+                Optional<PricePost> existente = preciosDisponibles.stream()
+                        .filter(p -> p.getCodeCountry().equals(dto.getCodeCountry())
+                                && p.getCurrency().equals(dto.getCurrency()))
+                        .findFirst();
 
-            if (existente.isPresent()) {
-                PricePost p = existente.get();
-                p.setAmount(dto.getAmount());
-                p.setCountry(dto.getCountry()); // Actualizar nombre país si cambió
-                repositoryPricePost.save(p);
-                preciosDisponibles.remove(p); // Ya procesado
-            } else {
-                // Crear nuevo
-                PricePost newPrice = PricePost.builder()
-                        .post(post)
-                        .codeCountry(dto.getCodeCountry())
-                        .country(dto.getCountry())
-                        .amount(dto.getAmount())
-                        .currency(dto.getCurrency())
-                        .build();
-                repositoryPricePost.save(newPrice);
-            }
-        });
+                if (existente.isPresent()) {
+                    PricePost p = existente.get();
+                    p.setAmount(dto.getAmount());
+                    p.setCountry(dto.getCountry());
+                    repositoryPricePost.save(p);
+                    preciosDisponibles.remove(p);
+                } else {
+                    PricePost newPrice = PricePost.builder()
+                            .post(post)
+                            .codeCountry(dto.getCodeCountry())
+                            .country(dto.getCountry())
+                            .amount(dto.getAmount())
+                            .currency(dto.getCurrency())
+                            .build();
+                    repositoryPricePost.save(newPrice);
+                }
+            });
+        }
 
-        // Eliminar los que sobraron (estaban en BD pero no en el DTO)
         repositoryPricePost.deleteAll(preciosDisponibles);
 
-        PostResponseDTO response = new PostResponseDTO();
-        response.setId(post.getId());
-        response.setVideoUrl(post.getVideoUrl());
-        response.setPreviewUrl(post.getPreviewUrl());
-        response.setThumbnailUrl(post.getThumbnailUrl());
-        response.setTitle(post.getTitle());
-        response.setDescription(post.getDescription());
-        response.setSection(sectionWebMapper.toSectionResponseDTO(post.getSection()));
-        response.setDurationMinutes(post.getDuration());
-
-        List<PostModel> relacioness = repositoryPostModel
-                .findByPostId(post.getId());
-
-        List<Model> modelos = relacioness.stream()
-                .map(PostModel::getModel)
-                .toList();
-
-        response.setModels(modelWebMapper.toModelDtoList(modelos));
-
-        List<PricePost> precios = repositoryPricePost.findByPostId(post.getId());
-
-        response.setPrices(priceWebMapper.toPriceDtoList(precios));
-
-        return Optional.of(response);
+        return Optional.of(mapToResponseDTO(post));
     }
 
     @Override
     public Optional<PostResponseDTO> getPost(Long id) {
-        if (repositoryPost.existsById(id)) {
-            PostResponseDTO response = new PostResponseDTO();
-            response.setId(id);
-            response.setVideoUrl(repositoryPost.findById(id).get().getVideoUrl());
-            response.setPreviewUrl(repositoryPost.findById(id).get().getPreviewUrl());
-            response.setThumbnailUrl(repositoryPost.findById(id).get().getThumbnailUrl());
-            response.setTitle(repositoryPost.findById(id).get().getTitle());
-            response.setDescription(repositoryPost.findById(id).get().getDescription());
-            response.setSection(sectionWebMapper.toSectionResponseDTO(repositoryPost.findById(id).get().getSection()));
-            response.setDurationMinutes(repositoryPost.findById(id).get().getDuration());
-
-            List<PostModel> relacioness = repositoryPostModel
-                    .findByPostId(id);
-
-            List<Model> modelos = relacioness.stream()
-                    .map(PostModel::getModel)
-                    .toList();
-
-            response.setModels(modelWebMapper.toModelDtoList(modelos));
-
-            List<PricePost> precios = repositoryPricePost.findByPostId(id);
-
-            response.setPrices(priceWebMapper.toPriceDtoList(precios));
-            return Optional.of(response);
-        } else {
-            throw new PostNotFoundException("El post con id " + id + " no se encontro");
-        }
+        return repositoryPost.findById(id).map(this::mapToResponseDTO);
     }
 
     @Override
     public List<PostResponseDTO> getAllPosts() {
-        List<Post> posts = repositoryPost.findAll();
-        List<PostResponseDTO> response = new ArrayList<>();
-
-        for (Post post : posts) {
-            PostResponseDTO postResponseDTO = new PostResponseDTO();
-            postResponseDTO.setId(post.getId());
-            postResponseDTO.setVideoUrl(post.getVideoUrl());
-            postResponseDTO.setPreviewUrl(post.getPreviewUrl());
-            postResponseDTO.setThumbnailUrl(post.getThumbnailUrl());
-            postResponseDTO.setTitle(post.getTitle());
-            postResponseDTO.setDescription(post.getDescription());
-            postResponseDTO.setSection(sectionWebMapper.toSectionResponseDTO(post.getSection()));
-            postResponseDTO.setDurationMinutes(post.getDuration());
-
-            List<PostModel> relacioness = repositoryPostModel
-                    .findByPostId(post.getId());
-
-            List<Model> modelos = relacioness.stream()
-                    .map(PostModel::getModel)
-                    .toList();
-
-            postResponseDTO.setModels(modelWebMapper.toModelDtoList(modelos));
-
-            List<PricePost> precios = repositoryPricePost.findByPostId(post.getId());
-
-            postResponseDTO.setPrices(priceWebMapper.toPriceDtoList(precios));
-            response.add(postResponseDTO);
-        }
-        return response;
+        return repositoryPost.findAll().stream()
+                .map(this::mapToResponseDTO)
+                .toList();
     }
 
     @Override
@@ -345,38 +255,13 @@ public class ServicePost implements IServicePost {
             throw new PostNotFoundException("No hay publicaciones con modelos que coincidan con " + modelName);
         }
 
-        // Usar un Map para eliminar duplicados basados en el ID del post
         Map<Long, PostResponseDTO> responseMap = new java.util.HashMap<>();
 
         for (PostModel relacion : relaciones) {
             Post post = relacion.getPost();
-            if (responseMap.containsKey(post.getId())) {
-                continue;
+            if (!responseMap.containsKey(post.getId())) {
+                responseMap.put(post.getId(), mapToResponseDTO(post));
             }
-
-            PostResponseDTO postResponseDTO = new PostResponseDTO();
-            postResponseDTO.setId(post.getId());
-            postResponseDTO.setVideoUrl(post.getVideoUrl());
-            postResponseDTO.setPreviewUrl(post.getPreviewUrl());
-            postResponseDTO.setThumbnailUrl(post.getThumbnailUrl());
-            postResponseDTO.setTitle(post.getTitle());
-            postResponseDTO.setDescription(post.getDescription());
-            postResponseDTO.setSection(sectionWebMapper.toSectionResponseDTO(post.getSection()));
-            postResponseDTO.setDurationMinutes(post.getDuration());
-
-            List<PostModel> relacioness = repositoryPostModel
-                    .findByPostId(post.getId());
-
-            List<Model> modelos = relacioness.stream()
-                    .map(PostModel::getModel)
-                    .toList();
-
-            postResponseDTO.setModels(modelWebMapper.toModelDtoList(modelos));
-
-            List<PricePost> precios = repositoryPricePost.findByPostId(post.getId());
-
-            postResponseDTO.setPrices(priceWebMapper.toPriceDtoList(precios));
-            responseMap.put(post.getId(), postResponseDTO);
         }
         return new ArrayList<>(responseMap.values());
     }
@@ -390,34 +275,7 @@ public class ServicePost implements IServicePost {
             throw new PostNotFoundException("No hay publicaciones en secciones que coincidan con " + sectionName);
         }
 
-        List<PostResponseDTO> response = new ArrayList<>();
-
-        for (Post post : posts) {
-            PostResponseDTO postResponseDTO = new PostResponseDTO();
-            postResponseDTO.setId(post.getId());
-            postResponseDTO.setVideoUrl(post.getVideoUrl());
-            postResponseDTO.setPreviewUrl(post.getPreviewUrl());
-            postResponseDTO.setThumbnailUrl(post.getThumbnailUrl());
-            postResponseDTO.setTitle(post.getTitle());
-            postResponseDTO.setDescription(post.getDescription());
-            postResponseDTO.setSection(sectionWebMapper.toSectionResponseDTO(post.getSection()));
-            postResponseDTO.setDurationMinutes(post.getDuration());
-
-            List<PostModel> relaciones = repositoryPostModel
-                    .findByPostId(post.getId());
-
-            List<Model> modelos = relaciones.stream()
-                    .map(PostModel::getModel)
-                    .toList();
-
-            postResponseDTO.setModels(modelWebMapper.toModelDtoList(modelos));
-
-            List<PricePost> precios = repositoryPricePost.findByPostId(post.getId());
-
-            postResponseDTO.setPrices(priceWebMapper.toPriceDtoList(precios));
-            response.add(postResponseDTO);
-        }
-        return response;
+        return posts.stream().map(this::mapToResponseDTO).toList();
     }
 
     @Override
@@ -429,33 +287,54 @@ public class ServicePost implements IServicePost {
             throw new PostNotFoundException("No hay publicaciones cuyo título coincida con " + title);
         }
 
-        List<PostResponseDTO> response = new ArrayList<>();
+        return posts.stream().map(this::mapToResponseDTO).toList();
+    }
 
-        for (Post post : posts) {
-            PostResponseDTO postResponseDTO = new PostResponseDTO();
-            postResponseDTO.setId(post.getId());
-            postResponseDTO.setVideoUrl(post.getVideoUrl());
-            postResponseDTO.setPreviewUrl(post.getPreviewUrl());
-            postResponseDTO.setThumbnailUrl(post.getThumbnailUrl());
-            postResponseDTO.setTitle(post.getTitle());
-            postResponseDTO.setDescription(post.getDescription());
-            postResponseDTO.setSection(sectionWebMapper.toSectionResponseDTO(post.getSection()));
-            postResponseDTO.setDurationMinutes(post.getDuration());
+    private PostResponseDTO mapToResponseDTO(Post post) {
+        PostResponseDTO response = new PostResponseDTO();
+        response.setId(post.getId());
 
-            List<PostModel> relaciones = repositoryPostModel
-                    .findByPostId(post.getId());
+        // Access Control Logic
+        String mainVideoUrl = null;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-            List<Model> modelos = relaciones.stream()
-                    .map(PostModel::getModel)
-                    .toList();
-
-            postResponseDTO.setModels(modelWebMapper.toModelDtoList(modelos));
-
-            List<PricePost> precios = repositoryPricePost.findByPostId(post.getId());
-
-            postResponseDTO.setPrices(priceWebMapper.toPriceDtoList(precios));
-            response.add(postResponseDTO);
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            String email = auth.getName();
+            Optional<User> user = repositoryRegistro.findByEmail(email);
+            if (user.isPresent()) {
+                // Check if user purchased the video
+                boolean purchased = repositoryPurchase.existsByBuyerUserIdAndVideoUrlId(user.get().getId(),
+                        post.getVideo().getId());
+                // Also allow if user is the creator? Or ADMIN? Assuming ADMIN can see all.
+                // For now, just purchase check.
+                if (purchased) {
+                    mainVideoUrl = serviceVideo.getPresignedUrl(post.getVideo().getS3Key());
+                }
+            }
         }
+
+        response.setVideoUrl(mainVideoUrl);
+
+        // Preview is always accessible
+        response.setPreviewUrl(serviceVideo.getPresignedUrl(post.getPreviewVideo().getS3Key()));
+
+        // Thumbnail is always accessible
+        response.setThumbnailUrl(post.getThumbnail().getS3Url());
+
+        response.setTitle(post.getTitle());
+        response.setDescription(post.getDescription());
+        response.setSection(sectionWebMapper.toSectionResponseDTO(post.getSection()));
+        response.setDurationMinutes(post.getDuration());
+
+        List<PostModel> relacioness = repositoryPostModel.findByPostId(post.getId());
+        List<Model> modelos = relacioness.stream()
+                .map(PostModel::getModel)
+                .toList();
+        response.setModels(modelWebMapper.toModelDtoList(modelos));
+
+        List<PricePost> precios = repositoryPricePost.findByPostId(post.getId());
+        response.setPrices(priceWebMapper.toPriceDtoList(precios));
+
         return response;
     }
 }

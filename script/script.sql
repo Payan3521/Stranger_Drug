@@ -26,6 +26,7 @@ CREATE TABLE videos (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     s3_bucket VARCHAR(150) NOT NULL,
     s3_key VARCHAR(300) NOT NULL,
+    s3_url VARCHAR(225),
     video_type ENUM('MAIN', 'PREVIEW') NOT NULL
 );
 

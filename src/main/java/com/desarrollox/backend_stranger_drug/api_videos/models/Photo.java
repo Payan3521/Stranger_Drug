@@ -23,11 +23,11 @@ public class Photo {
     private Long id;
 
     @Column(name = "s3_bucket", nullable = false)
-    private String bucket;
+    private String s3Bucket;
 
     @Column(name = "s3_key", nullable = false)
-    private String key;
+    private String s3Key;
 
     @Column(name = "s3_url", nullable = false)
-    private String url;
+    private String s3Url;
 }

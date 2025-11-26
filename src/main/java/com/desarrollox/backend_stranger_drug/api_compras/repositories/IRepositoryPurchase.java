@@ -10,7 +10,7 @@ import com.desarrollox.backend_stranger_drug.api_compras.models.Purchase;
 import jakarta.transaction.Transactional;
 
 @Repository
-public interface IRepositoryPurchase extends JpaRepository<Purchase, Long>{
+public interface IRepositoryPurchase extends JpaRepository<Purchase, Long> {
 
     List<Purchase> findByBuyerUser_IdAndStatusPurchaseClienteIsTrue(Long buyerId);
 
@@ -18,26 +18,18 @@ public interface IRepositoryPurchase extends JpaRepository<Purchase, Long>{
 
     @Modifying
     @Transactional
-    @Query(
-        value = "UPDATE purchases SET status_purchase_cliente = false WHERE id = :id",
-        nativeQuery = true
-    )
+    @Query(value = "UPDATE purchases SET status_purchase_cliente = false WHERE id = :id", nativeQuery = true)
     int softDeleteCliente(@Param("id") Long id);
 
     @Modifying
     @Transactional
-    @Query(
-        value = "UPDATE purchases SET status_purchase_admin = false WHERE id = :id",
-        nativeQuery = true
-    )
+    @Query(value = "UPDATE purchases SET status_purchase_admin = false WHERE id = :id", nativeQuery = true)
     int softDeleteAdmin(@Param("id") Long id);
 
     @Modifying
     @Transactional
-    @Query(
-        value = "UPDATE purchases SET status_purchase_admin = false",
-        nativeQuery = true
-    )
+    @Query(value = "UPDATE purchases SET status_purchase_admin = false", nativeQuery = true)
     int softDeleteAll();
-    
+
+    boolean existsByBuyerUserIdAndVideoUrlId(Long buyerId, Long videoId);
 }
