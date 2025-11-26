@@ -14,6 +14,7 @@ import com.desarrollox.backend_stranger_drug.api_registro.exception.UserAlreadyR
 import com.desarrollox.backend_stranger_drug.api_registro.exception.UserNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_secciones.exception.SectionAlreadyExistsException;
 import com.desarrollox.backend_stranger_drug.api_secciones.exception.SectionNotFoundException;
+import com.desarrollox.backend_stranger_drug.api_videos.exception.VideoNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_notificaciones.exception.NotificationNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_publicaciones.exception.PostNotFoundException;
 
@@ -35,7 +36,8 @@ public class GlobalExceptionHandler {
         PurchaseNotFoundException.class,
         SectionNotFoundException.class,
         NotificationNotFoundException.class,
-        PostNotFoundException.class
+        PostNotFoundException.class,
+        VideoNotFoundException.class
     })
     public ResponseEntity<Map<String, Object>> handleNotFound(RuntimeException ex){
         return buildResponse(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage());

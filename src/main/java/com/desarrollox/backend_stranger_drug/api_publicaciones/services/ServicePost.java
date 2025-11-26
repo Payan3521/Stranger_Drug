@@ -23,6 +23,7 @@ import com.desarrollox.backend_stranger_drug.api_publicaciones.repositories.IRep
 import com.desarrollox.backend_stranger_drug.api_secciones.exception.SectionNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_secciones.models.Section;
 import com.desarrollox.backend_stranger_drug.api_secciones.repositories.SectionRepository;
+import com.desarrollox.backend_stranger_drug.api_videos.services.IServiceVideo;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -37,6 +38,7 @@ public class ServicePost implements IServicePost {
     private final ModelWebMapper modelWebMapper;
     private final SectionWebMapper sectionWebMapper;
     private final PriceWebMapper priceWebMapper;
+    private final IServiceVideo serviceVideo;
 
     @Override
     public PostResponseDTO savePost(PostDto postDto) {

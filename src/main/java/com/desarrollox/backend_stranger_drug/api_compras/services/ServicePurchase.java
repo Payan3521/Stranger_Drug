@@ -10,6 +10,9 @@ import com.desarrollox.backend_stranger_drug.api_compras.repositories.IRepositor
 import com.desarrollox.backend_stranger_drug.api_registro.exception.UserNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_registro.models.User;
 import com.desarrollox.backend_stranger_drug.api_registro.repositories.IRepositoryRegistro;
+import com.desarrollox.backend_stranger_drug.api_videos.exception.VideoNotFoundException;
+import com.desarrollox.backend_stranger_drug.api_videos.models.Video;
+import com.desarrollox.backend_stranger_drug.api_videos.repositories.IRepositoryVideo;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -18,6 +21,7 @@ public class ServicePurchase implements IServicePurchase{
 
     private final IRepositoryPurchase repositoryPurchase;
     private final IRepositoryRegistro repositoryRegistro;
+    private final IRepositoryVideo repositoryVideo;
 
     @Override
     public Purchase create(PurchaseDto purchase) {
@@ -25,10 +29,14 @@ public class ServicePurchase implements IServicePurchase{
         if(!repositoryRegistro.existsById(purchase.getBuyerUserId())){
             throw new UserNotFoundException("El usuario con id: " + purchase.getBuyerUserId() + " No fue encontrado");
         }
+        if(!repositoryVideo.existsById(purchase.getVideoId())){
+            throw new VideoNotFoundException("El video con id: " + purchase.getVideoId() + " No fue encontrado");
+        }
 
         User buyerUser = repositoryRegistro.findById(purchase.getBuyerUserId()).get();
+        Video video = repositoryVideo.findById(purchase.getVideoId()).get();
 
-        Purchase compra = new Purchase(buyerUser, purchase.getVideoUrl(), purchase.getPricePaid());
+        Purchase compra = new Purchase(buyerUser, video, purchase.getPricePaid());
 
         Purchase saved = repositoryPurchase.save(compra);
 
