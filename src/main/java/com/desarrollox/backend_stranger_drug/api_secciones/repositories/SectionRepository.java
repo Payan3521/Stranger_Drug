@@ -8,4 +8,5 @@ import com.desarrollox.backend_stranger_drug.api_secciones.models.Section;
 public interface SectionRepository extends JpaRepository<Section, Long> {
 
     boolean existsByName(String name);
+    Section findByName(String name);
 }

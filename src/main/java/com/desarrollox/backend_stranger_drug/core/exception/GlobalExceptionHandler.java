@@ -15,6 +15,7 @@ import com.desarrollox.backend_stranger_drug.api_registro.exception.UserNotFound
 import com.desarrollox.backend_stranger_drug.api_secciones.exception.SectionAlreadyExistsException;
 import com.desarrollox.backend_stranger_drug.api_secciones.exception.SectionNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_notificaciones.exception.NotificationNotFoundException;
+import com.desarrollox.backend_stranger_drug.api_publicaciones.exception.PostNotFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -33,7 +34,8 @@ public class GlobalExceptionHandler {
         ModelNotFoundException.class,
         PurchaseNotFoundException.class,
         SectionNotFoundException.class,
-        NotificationNotFoundException.class
+        NotificationNotFoundException.class,
+        PostNotFoundException.class
     })
     public ResponseEntity<Map<String, Object>> handleNotFound(RuntimeException ex){
         return buildResponse(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage());
