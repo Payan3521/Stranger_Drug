@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.desarrollox.backend_stranger_drug.api_compras.exception.PurchaseNotFoundException;
+import com.desarrollox.backend_stranger_drug.api_login.exception.InvalidCredentialsException;
 import com.desarrollox.backend_stranger_drug.api_modelos.exception.ModelNotFoundException;
 import com.desarrollox.backend_stranger_drug.api_registro.exception.InvalidAgeException;
 import com.desarrollox.backend_stranger_drug.api_registro.exception.UserAlreadyRegisteredException;
@@ -41,6 +42,13 @@ public class GlobalExceptionHandler {
     })
     public ResponseEntity<Map<String, Object>> handleNotFound(RuntimeException ex){
         return buildResponse(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage());
+    }
+
+    @ExceptionHandler({
+        InvalidCredentialsException.class
+    })
+    public ResponseEntity<Map<String, Object>> handleInvalidCredentials(RuntimeException ex){
+        return buildResponse(HttpStatus.UNAUTHORIZED, "Credenciales inválidas", ex.getMessage());
     }
 
     @ExceptionHandler({
