@@ -1,10 +1,9 @@
-1. cambiar videoUrl en compra y publicacion
-3. variables de entorno para login
-4. api de pagos
-5. api de videos
-6. tablas de login
-7. excepciones en el global exception handler
-8. probar: login, publicaciones, pagos y videos
-9. precios de publicacion
-10. validaciones en request
-11. ver referencescolumnnameid
+1. variables de entorno para login
+2. api de pagos
+3. api de videos
+4. tablas de login
+5. excepciones en el global exception handler
+6. probar: login, publicaciones, pagos y videos
+7. precios de publicacion
+8. validaciones en request
+9. ver referencescolumnnameid

@@ -6,6 +6,26 @@ USE stranger_drug;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+CREATE TABLE login_attempts(
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(225) NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    successful BOOLEAN NOT NULL,
+    failure_reason VARCHAR(255),
+    attempt_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user_agent VARCHAR(255)
+);
+
+CREATE TABLE refresh_tokens(
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    token VARCHAR(500) NOT NULL,
+    user_email VARCHAR(225) NOT NULL,
+    expiry_date TIMESTAMP NOT NULL,
+    revoked BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    revoked_at TIMESTAMP
+);
+
 CREATE TABLE users(
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -26,6 +46,7 @@ CREATE TABLE videos (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     s3_bucket VARCHAR(150) NOT NULL,
     s3_key VARCHAR(300) NOT NULL,
+    s3_url VARCHAR(225),
     video_type ENUM('MAIN', 'PREVIEW') NOT NULL
 );
 
@@ -59,6 +80,14 @@ CREATE TABLE sections(
     description TEXT NOT NULL
 );
 
+
+CREATE TABLE photos(
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    s3_bucket VARCHAR(150) NOT NULL,
+    s3_key VARCHAR(300) NOT NULL,
+    s3_url VARCHAR(225) NOT NULL
+);
+
 CREATE TABLE posts(
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     main_video_id BIGINT NOT NULL,
@@ -68,13 +97,13 @@ CREATE TABLE posts(
     description TEXT NOT NULL,
     create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     duration_minutes INT NOT NULL,
-    thumbnail_url VARCHAR(225) NOT NULL,
+    thumbnail_id BIGINT NOT NULL,
 
     FOREIGN KEY (main_video_id) REFERENCES videos(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (preview_video_id) REFERENCES videos(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (thumbnail_id) REFERENCES photos(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
-
 
 CREATE TABLE prices_post(
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

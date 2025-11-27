@@ -35,6 +35,9 @@ public class Video {
     @Column(name = "video_type", nullable = false)
     private VideoType type;
 
+    @Column(name = "s3_url")
+    private String s3Url;
+
     public enum VideoType {
         MAIN,
         PREVIEW
